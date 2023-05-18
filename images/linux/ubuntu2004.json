@@ -60,10 +60,27 @@
         {
         "type": "docker",
         "image": "ubuntu:20.04",
+        "run_command": [
+            "-d", "-i", "-t", "--rm",
+            "-v", "{{template_dir}}/scripts/helpers/prequisites.sh:/init", "--entrypoint=/init",
+            "--cgroupns=host", "--tmpfs", "/run", "--tmpfs", "/run/lock", "-v", "/sys/fs/cgroup:/sys/fs/cgroup",
+            "--", "{{.Image}}"
+        ],
         "commit": true
         }        
     ],
     "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+"while true; do",
+"  if pgrep -f '/lib/systemd/systemd' >/dev/null; then",
+"    break",
+"  fi",
+"  sleep 1",
+"done"
+            ]
+        },
         {
             "type": "shell",
             "inline": [
