@@ -68,7 +68,7 @@
             "type": "shell",
             "inline": [
                 "apt-get update",
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo lsb-release wget"
+                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates sudo lsb-release wget"
             ],
             "execute_command": "sh -c '{{ .Vars }} {{ .Path }}'"
         },        
