@@ -85,14 +85,14 @@
             "type": "shell",
             "inline": [
                 "apt-get update",
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates sudo lsb-release wget"
+                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates sudo"
             ],
             "execute_command": "sh -c '{{ .Vars }} {{ .Path }}'"
         },
         {
             "type": "shell",
             "inline": [
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends walinuxagent"
+                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends  lsb-release wget walinuxagent motd-news-config"
             ],
             "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
         },       
