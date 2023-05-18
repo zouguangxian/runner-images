@@ -88,7 +88,14 @@
                 "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates sudo lsb-release wget"
             ],
             "execute_command": "sh -c '{{ .Vars }} {{ .Path }}'"
-        },        
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends walinuxagent"
+            ],
+            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+        },       
         {
             "type": "shell",
             "inline": [
