@@ -65,10 +65,15 @@ extract_dotnet_sdk() {
     set -e
     dest="./tmp-$(basename -s .tar.gz $ARCHIVE_NAME)"
     echo "Extracting $ARCHIVE_NAME to $dest"
-    mkdir "$dest" && tar -C "$dest" -xzf "$ARCHIVE_NAME"
+    mkdir -p "$dest" && tar -C "$dest" -xzf "$ARCHIVE_NAME"
+    mkdir -p /usr/share/dotnet/shared/ /usr/share/dotnet/host/ /usr/share/dotnet/sdk/
     rsync -qav --remove-source-files "$dest/shared/" /usr/share/dotnet/shared/
     rsync -qav --remove-source-files "$dest/host/" /usr/share/dotnet/host/
     rsync -qav --remove-source-files "$dest/sdk/" /usr/share/dotnet/sdk/
+    rsync -qav --remove-source-files "$dest/dotnet" /usr/share/dotnet/dotnet
+    if [ ! -f /usr/bin/dotnet ]; then
+        ln -s ../share/dotnet/dotnet /usr/bin/dotnet
+    fi
     rm -rf "$dest" "$ARCHIVE_NAME"
 }
 
@@ -76,11 +81,12 @@ extract_dotnet_sdk() {
 export -f download_with_retries
 export -f extract_dotnet_sdk
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
 parallel --jobs 0 --halt soon,fail=1 \
-    'url="https://dotnetcli.blob.core.windows.net/dotnet/Sdk/{}/dotnet-sdk-{}-linux-x64.tar.gz"; \
-    download_with_retries $url' ::: "${sortedSdks[@]}"
+    "url='https://dotnetcli.blob.core.windows.net/dotnet/Sdk/{}/dotnet-sdk-{}-linux-$arch.tar.gz'; \
+    download_with_retries \$url" ::: "${sortedSdks[@]}"
 
-find . -name "*.tar.gz" | parallel --halt soon,fail=1 'extract_dotnet_sdk {}'
+find . -name "dotnet-sdk-*.tar.gz" | parallel --halt soon,fail=1 'extract_dotnet_sdk {}'
 
 # NuGetFallbackFolder at /usr/share/dotnet/sdk/NuGetFallbackFolder is warmed up by smoke test
 # Additional FTE will just copy to ~/.dotnet/NuGet which provides no benefit on a fungible machine

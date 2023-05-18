@@ -50,9 +50,10 @@ function GetChromiumRevision {
     echo $RIGHT_REVISION
 }
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/')
 # Download and install Google Chrome
-CHROME_DEB_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-CHROME_DEB_NAME="google-chrome-stable_current_amd64.deb"
+CHROME_DEB_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_$arch.deb"
+CHROME_DEB_NAME="google-chrome-stable_current_$arch.deb"
 download_with_retries $CHROME_DEB_URL "/tmp" "${CHROME_DEB_NAME}"
 apt install "/tmp/${CHROME_DEB_NAME}" -f
 echo "CHROME_BIN=/usr/bin/google-chrome" | tee -a /etc/environment

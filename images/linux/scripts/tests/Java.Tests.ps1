@@ -10,8 +10,9 @@ Describe "Java" {
     [array]$adoptJdkVersions = ($javaVendors | Where-Object {$_.name -eq "Adopt"}).versions | ForEach-Object { @{Version = $_} }
 
     It "Java <DefaultJavaVersion> is default" -TestCases @{ DefaultJavaVersion = $defaultVersion } {
+        $arch = Invoke-Command -ScriptBlock { uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/'}
         $actualJavaPath = Get-EnvironmentVariable "JAVA_HOME"
-        $expectedJavaPath = Get-EnvironmentVariable "JAVA_HOME_${DefaultJavaVersion}_X64"
+        $expectedJavaPath = Get-EnvironmentVariable "JAVA_HOME_${DefaultJavaVersion}_$($arch.ToUpper())"
 
         $actualJavaPath | Should -Not -BeNullOrEmpty
         $expectedJavaPath | Should -Not -BeNullOrEmpty
@@ -38,7 +39,8 @@ Describe "Java" {
     }
 
     It "Java <Version>" -TestCases $jdkVersions {
-        $javaVariableValue = Get-EnvironmentVariable "JAVA_HOME_${Version}_X64"
+        $arch = Invoke-Command -ScriptBlock { uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/' }
+        $javaVariableValue = Get-EnvironmentVariable "JAVA_HOME_${Version}_$($arch.ToUpper())"
         $javaVariableValue | Should -Not -BeNullOrEmpty
         $javaPath = Join-Path $javaVariableValue "bin/java"
 
@@ -51,7 +53,8 @@ Describe "Java" {
     }
 
     It "Java Adopt <Version>" -TestCases $adoptJdkVersions -Skip:(Test-IsUbuntu22) {
-        $javaPath = Join-Path (Get-ChildItem ${env:AGENT_TOOLSDIRECTORY}\Java_Adopt_jdk\${Version}*) "x64\bin\java"
+        $arch = Invoke-Command -ScriptBlock { uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/' }
+        $javaPath = Join-Path (Get-ChildItem ${env:AGENT_TOOLSDIRECTORY}\Java_Adopt_jdk\${Version}*) "${arch}\bin\java"
         "`"$javaPath`" -version" | Should -ReturnZeroExitCode
 
         if ($Version -eq 8) {

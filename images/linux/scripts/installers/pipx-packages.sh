@@ -9,10 +9,11 @@ export PATH="$PATH:/opt/pipx_bin"
 
 pipx_packages=$(get_toolset_value ".pipx[] .package")
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
 for package in $pipx_packages; do
     python_version=$(get_toolset_value ".pipx[] | select(.package == \"$package\") .python")
     if [ "$python_version" != "null" ]; then
-        python_path="/opt/hostedtoolcache/Python/$python_version*/x64/bin/python$python_version"
+        python_path="/opt/hostedtoolcache/Python/$python_version*/$arch/bin/python$python_version"
         echo "Install $package into python $python_path"
         pipx install $package --python $python_path
     else

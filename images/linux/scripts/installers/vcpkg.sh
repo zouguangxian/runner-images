@@ -11,6 +11,10 @@ echo "VCPKG_INSTALLATION_ROOT=${VCPKG_INSTALLATION_ROOT}" | tee -a /etc/environm
 # Install vcpkg
 git clone https://github.com/Microsoft/vcpkg $VCPKG_INSTALLATION_ROOT
 
+if [ "$(uname -m)" == "aarch64" ]; then
+    export VCPKG_FORCE_SYSTEM_BINARIES=1
+fi
+
 $VCPKG_INSTALLATION_ROOT/bootstrap-vcpkg.sh
 
 # workaround https://github.com/microsoft/vcpkg/issues/27786
@@ -23,5 +27,6 @@ chmod 0777 -R $VCPKG_INSTALLATION_ROOT
 ln -sf $VCPKG_INSTALLATION_ROOT/vcpkg /usr/local/bin
 
 rm -rf /root/.vcpkg $HOME/.vcpkg
+
 
 invoke_tests "Tools" "Vcpkg"

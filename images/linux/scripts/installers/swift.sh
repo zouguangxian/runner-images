@@ -8,7 +8,7 @@
 source $HELPER_SCRIPTS/install.sh
 
 # Install
-image_label="$(lsb_release -rs)"
+image_label="$(lsb_release -rs)$(uname -m | sed -e 's/x86_64//g' -e 's/aarch64/-&/g')"
 swift_version=$(curl -s "https://api.github.com/repos/apple/swift/releases/latest" | jq -r '.tag_name | match("[0-9.]+").string')
 
 swift_tar_name="swift-$swift_version-RELEASE-ubuntu$image_label.tar.gz"

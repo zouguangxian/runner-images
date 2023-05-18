@@ -116,7 +116,9 @@ echo "y" | $SDKMANAGER ${components[@]}
 
 # Old skdmanager from sdk tools doesn't work with Java > 8, set version 8 explicitly
 if isUbuntu20 || isUbuntu22; then
-    sed -i "2i export JAVA_HOME=${JAVA_HOME_8_X64}" ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
+    archAlias=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/' | tr '[:lower:]' '[:upper:]')
+    varName="JAVA_HOME_8_${archAlias}"
+    sed -i "2i export JAVA_HOME=${!varName}" ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
 fi
 
 # Add required permissions

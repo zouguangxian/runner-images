@@ -37,10 +37,11 @@ function InstallPyPy
     echo "Put '$PYPY_FULL_VERSION' to PYPY_VERSION file"
     echo $PYPY_FULL_VERSION > "$PACKAGE_TEMP_FOLDER/PYPY_VERSION"
 
+    arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
     # PyPy folder structure
     PYPY_TOOLCACHE_PATH=$AGENT_TOOLSDIRECTORY/PyPy
     PYPY_TOOLCACHE_VERSION_PATH=$PYPY_TOOLCACHE_PATH/$PYTHON_FULL_VERSION
-    PYPY_TOOLCACHE_VERSION_ARCH_PATH=$PYPY_TOOLCACHE_VERSION_PATH/x64
+    PYPY_TOOLCACHE_VERSION_ARCH_PATH=$PYPY_TOOLCACHE_VERSION_PATH/$arch
 
     echo "Check if PyPy hostedtoolcache folder exist..."
     if [ ! -d $PYPY_TOOLCACHE_PATH ]; then
@@ -67,7 +68,7 @@ function InstallPyPy
     ./python -m pip install --ignore-installed pip
 
     echo "Create complete file"
-    touch $PYPY_TOOLCACHE_VERSION_PATH/x64.complete
+    touch $PYPY_TOOLCACHE_VERSION_PATH/$arch.complete
 
     echo "Remove '$PACKAGE_TAR_TEMP_PATH'"
     rm -f $PACKAGE_TAR_TEMP_PATH
@@ -77,11 +78,12 @@ function InstallPyPy
 pypyVersions=$(curl https://downloads.python.org/pypy/versions.json)
 toolsetVersions=$(get_toolset_value '.toolcache[] | select(.name | contains("PyPy")) | .versions[]')
 
+arch=$(uname -m | sed -e 's/aarch64/aarch64/' -e 's/x86_64/x64/')
 for toolsetVersion in $toolsetVersions; do
     latestMajorPyPyVersion=$(echo $pypyVersions |
-        jq -r --arg toolsetVersion $toolsetVersion '.[]
+        jq -r --arg toolsetVersion $toolsetVersion --arg arch $arch '.[]
         | select((.python_version | startswith($toolsetVersion)) and .stable == true).files[]
-        | select(.arch == "x64" and .platform == "linux").download_url' | head -1)
+        | select(.arch == $arch and .platform == "linux").download_url' | head -1)
     if [[ -z "$latestMajorPyPyVersion" ]]; then
         echo "Failed to get PyPy version '$toolsetVersion'"
         exit 1

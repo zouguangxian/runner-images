@@ -6,7 +6,8 @@ createEnvironmentVariable() {
     local VENDOR_NAME=$2
     local DEFAULT=$3
 
-    INSTALL_PATH_PATTERN=$(echo ${AGENT_TOOLSDIRECTORY}/Java_${VENDOR_NAME}_jdk/${JAVA_VERSION}*/x64/Contents/Home/)
+    arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
+    INSTALL_PATH_PATTERN=$(echo ${AGENT_TOOLSDIRECTORY}/Java_${VENDOR_NAME}_jdk/${JAVA_VERSION}*/$arch/Contents/Home/)
 
     if [[ ${DEFAULT} == "True" ]]; then
         echo "Setting up JAVA_HOME variable to ${INSTALL_PATH_PATTERN}"
@@ -31,14 +32,15 @@ installOpenJDK() {
         exit 1
     fi
 
-    asset=$(echo ${assetUrl} | jq -r '.[] | select(.binary.os=="mac" and .binary.image_type=="jdk" and .binary.architecture=="x64")')
+    arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
+    asset=$(echo ${assetUrl} | jq -r '.[] | select(.binary.os=="mac" and .binary.image_type=="jdk" and .binary.architecture=="$arch")')
     archivePath=$(echo ${asset} | jq -r '.binary.package.link')
     fullVersion=$(echo ${asset} | jq -r '.version.semver' | tr '+' '-')
 
     JAVA_TOOLCACHE_PATH=${AGENT_TOOLSDIRECTORY}/Java_${VENDOR_NAME}_jdk
 
     javaToolcacheVersionPath=$JAVA_TOOLCACHE_PATH/${fullVersion}
-    javaToolcacheVersionArchPath=${javaToolcacheVersionPath}/x64
+    javaToolcacheVersionArchPath=${javaToolcacheVersionPath}/$arch
 
     # Download and extract Java binaries
     download_with_retries ${archivePath} /tmp OpenJDK-${VENDOR_NAME}-${fullVersion}.tar.gz
@@ -48,7 +50,7 @@ installOpenJDK() {
 
     tar -xf /tmp/OpenJDK-${VENDOR_NAME}-${fullVersion}.tar.gz -C ${javaToolcacheVersionArchPath} --strip-components=1
     # Create complete file
-    touch ${javaToolcacheVersionPath}/x64.complete
+    touch ${javaToolcacheVersionPath}/$arch.complete
 
     # Create a symlink to '/Library/Java/JavaVirtualMachines'
     # so '/usr/libexec/java_home' will be able to find Java

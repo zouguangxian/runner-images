@@ -32,6 +32,7 @@ if [ ! -d $RUBY_PATH ]; then
     mkdir -p $RUBY_PATH
 fi
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
 for TOOLSET_VERSION in ${TOOLSET_VERSIONS[@]}; do
     PACKAGE_TAR_NAME=$(echo "$PACKAGE_TAR_NAMES" | grep "^ruby-${TOOLSET_VERSION}-ubuntu-${PLATFORM_VERSION}.tar.gz$" | sort -V | tail -1)
     RUBY_VERSION=$(echo "$PACKAGE_TAR_NAME" | cut -d'-' -f 2)
@@ -47,7 +48,7 @@ for TOOLSET_VERSION in ${TOOLSET_VERSIONS[@]}; do
     echo "Expand '$PACKAGE_TAR_NAME' to the '$RUBY_VERSION_PATH' folder"
     tar xf "/tmp/$PACKAGE_TAR_NAME" -C $RUBY_VERSION_PATH
 
-    COMPLETE_FILE_PATH="$RUBY_VERSION_PATH/x64.complete"
+    COMPLETE_FILE_PATH="$RUBY_VERSION_PATH/$arch.complete"
     if [ ! -f $COMPLETE_FILE_PATH ]; then
         echo "Create complete file"
         touch $COMPLETE_FILE_PATH

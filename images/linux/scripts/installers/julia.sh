@@ -9,11 +9,10 @@ source $HELPER_SCRIPTS/install.sh
 
 # get the latest julia version
 json=$(curl -sL "https://julialang-s3.julialang.org/bin/versions.json")
-julia_version=$(echo $json | jq -r '.[].files[] | select(.triplet=="x86_64-linux-gnu" and (.version | contains("-") | not)).version' | sort -V | tail -n1)
-
+julia_version=$(echo $json | jq -r --arg ARCH "$(uname -m)" '.[].files[] | select(.triplet == ($ARCH + "-linux-gnu") and (.version | contains("-") | not)).version' | sort -V | tail -n1)
 # download julia archive
-julia_tar_url=$(echo $json | jq -r ".[].files[].url | select(endswith(\"julia-${julia_version}-linux-x86_64.tar.gz\"))")
-julia_tar_name="julia-${julia_version}-linux-x86_64.tar.gz"
+julia_tar_url=$(echo $json | jq -r ".[].files[].url | select(endswith(\"julia-${julia_version}-linux-$(uname -m).tar.gz\"))")
+julia_tar_name="julia-${julia_version}-linux-$(uname -m).tar.gz"
 download_with_retries $julia_tar_url "/tmp" "${julia_tar_name}"
 
 # extract files and make symlink

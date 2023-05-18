@@ -21,6 +21,7 @@ prior_codeql_bundle_version="${prior_codeql_cli_version}-${prior_codeql_tag_name
 codeql_bundle_versions=("${codeql_bundle_version}" "${prior_codeql_bundle_version}")
 codeql_tag_names=("${codeql_tag_name}" "${prior_codeql_tag_name}")
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
 for index in "${!codeql_bundle_versions[@]}"; do
   bundle_version="${codeql_bundle_versions[$index]}"
   bundle_tag_name="${codeql_tag_names[$index]}"
@@ -29,7 +30,7 @@ for index in "${!codeql_bundle_versions[@]}"; do
     download_with_retries "https://github.com/github/codeql-action/releases/download/$bundle_tag_name/codeql-bundle.tar.gz" "/tmp" "codeql-bundle.tar.gz"
     codeql_archive="/tmp/codeql-bundle.tar.gz"
 
-    codeql_toolcache_path="$AGENT_TOOLSDIRECTORY/CodeQL/$bundle_version/x64"
+    codeql_toolcache_path="$AGENT_TOOLSDIRECTORY/CodeQL/$bundle_version/$arch"
     mkdir -p "$codeql_toolcache_path"
 
     echo "Unpacking the downloaded CodeQL bundle archive..."

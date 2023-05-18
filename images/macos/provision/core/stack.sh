@@ -9,15 +9,16 @@ stackArchive="/tmp/stack.tar.gz"
 echo "Download stack version $stackVersion..."
 download_with_retries $stackDownloadUrl "/tmp" "stack.tar.gz"
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
 stackToolcachePath="$AGENT_TOOLSDIRECTORY/stack/$stackVersion"
-destinationPath="$stackToolcachePath/x64"
+destinationPath="$stackToolcachePath/$arch"
 
 mkdir -p $destinationPath
 
 echo "Unzip stack archive..."
 tar -xzf $stackArchive -C $destinationPath --strip 1
 
-touch $stackToolcachePath/x64.complete
+touch $stackToolcachePath/$arch.complete
 
 echo "export PATH="\$PATH":$destinationPath" >> "$HOME/.bashrc"
 

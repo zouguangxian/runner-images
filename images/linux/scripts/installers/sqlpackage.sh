@@ -12,10 +12,11 @@ fi
 source $HELPER_SCRIPTS/install.sh
 source $HELPER_SCRIPTS/os.sh
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/')
 # Install libssl1.1 dependency
 if isUbuntu22; then
-    download_with_retries "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb" "/tmp"
-    dpkg -i /tmp/libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
+    download_with_retries "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.18_$arch.deb" "/tmp"
+    dpkg -i /tmp/libssl1.1_1.1.1f-1ubuntu2.18_$arch.deb
 fi
 
 # Install SqlPackage

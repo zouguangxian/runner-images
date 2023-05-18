@@ -8,6 +8,7 @@ source $HELPER_SCRIPTS/install.sh
 source $HELPER_SCRIPTS/os.sh
 source $HELPER_SCRIPTS/etc-environment.sh
 
+arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/')
 createJavaEnvironmentalVariable() {
     local JAVA_VERSION=$1
     local VENDOR_NAME=$2
@@ -16,10 +17,10 @@ createJavaEnvironmentalVariable() {
     case ${VENDOR_NAME} in
 
         "Adopt" )
-            INSTALL_PATH_PATTERN="/usr/lib/jvm/adoptopenjdk-${JAVA_VERSION}-hotspot-amd64" ;;
+            INSTALL_PATH_PATTERN="/usr/lib/jvm/adoptopenjdk-${JAVA_VERSION}-hotspot-$arch" ;;
 
         "Temurin-Hotspot" )
-            INSTALL_PATH_PATTERN="/usr/lib/jvm/temurin-${JAVA_VERSION}-jdk-amd64" ;;
+            INSTALL_PATH_PATTERN="/usr/lib/jvm/temurin-${JAVA_VERSION}-jdk-$arch" ;;
         *)
             echo "Unknown vendor"
             exit 1
@@ -33,8 +34,9 @@ createJavaEnvironmentalVariable() {
         update-java-alternatives -s ${INSTALL_PATH_PATTERN}
     fi
 
-    echo "Setting up JAVA_HOME_${JAVA_VERSION}_X64 variable to ${INSTALL_PATH_PATTERN}"
-    addEtcEnvironmentVariable JAVA_HOME_${JAVA_VERSION}_X64 ${INSTALL_PATH_PATTERN}
+    local archAlias=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/' | tr '[:lower:]' '[:upper:]')
+    echo "Setting up JAVA_HOME_${JAVA_VERSION}_${archAlias} variable to ${INSTALL_PATH_PATTERN}"
+    addEtcEnvironmentVariable JAVA_HOME_${JAVA_VERSION}_${archAlias} ${INSTALL_PATH_PATTERN}
 }
 
 enableRepositories() {
@@ -61,10 +63,10 @@ installOpenJDK() {
     # Install Java from PPA repositories.
     if [[ ${VENDOR_NAME} == "Temurin-Hotspot" ]]; then
         apt-get -y install temurin-${JAVA_VERSION}-jdk=\*
-        javaVersionPath="/usr/lib/jvm/temurin-${JAVA_VERSION}-jdk-amd64"
+        javaVersionPath="/usr/lib/jvm/temurin-${JAVA_VERSION}-jdk-$arch"
     elif [[ ${VENDOR_NAME} == "Adopt" ]]; then
         apt-get -y install adoptopenjdk-${JAVA_VERSION}-hotspot=\*
-        javaVersionPath="/usr/lib/jvm/adoptopenjdk-${JAVA_VERSION}-hotspot-amd64"
+        javaVersionPath="/usr/lib/jvm/adoptopenjdk-${JAVA_VERSION}-hotspot-$arch"
     else
         echo "${VENDOR_NAME} is invalid, valid names are: Temurin-Hotspot and Adopt"
         exit 1
@@ -84,11 +86,12 @@ installOpenJDK() {
     javaToolcacheVersionPath="${JAVA_TOOLCACHE_PATH}/${fullJavaVersion}"
     mkdir -p "${javaToolcacheVersionPath}"
 
+    local archAlias=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x64/')
     # Create a complete file
-    touch "${javaToolcacheVersionPath}/x64.complete"
+    touch "${javaToolcacheVersionPath}/$archAlias.complete"
 
     # Create symlink for Java
-    ln -s ${javaVersionPath} "${javaToolcacheVersionPath}/x64"
+    ln -s ${javaVersionPath} "${javaToolcacheVersionPath}/$archAlias"
 
     # add extra permissions to be able execute command without sudo
     chmod -R 777 /usr/lib/jvm
