@@ -92,7 +92,7 @@
         {
             "type": "shell",
             "inline": [
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends  lsb-release wget walinuxagent motd-news-config"
+                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends  lsb-release wget curl walinuxagent motd-news-config"
             ],
             "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
         },       
