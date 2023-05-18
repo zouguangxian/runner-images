@@ -67,6 +67,14 @@
         {
             "type": "shell",
             "inline": [
+                "apt-get update",
+                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo"
+            ],
+            "execute_command": "sh -c '{{ .Vars }} {{ .Path }}'"
+        },        
+        {
+            "type": "shell",
+            "inline": [
                 "mkdir {{user `image_folder`}}",
                 "chmod 777 {{user `image_folder`}}"
             ],
