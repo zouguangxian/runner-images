@@ -60,6 +60,7 @@
         {
         "type": "docker",
         "image": "ubuntu:20.04",
+        "privileged": true,
         "run_command": [
             "-d", "-i", "-t", "--rm",
             "-v", "{{template_dir}}/scripts/helpers/prequisites.sh:/init", "--entrypoint=/init",
