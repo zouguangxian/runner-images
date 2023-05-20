@@ -1,0 +1,7 @@
+#!/bin/sh
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates sudo
+
+# Install Systemd
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo systemd 
+exec /lib/systemd/systemd

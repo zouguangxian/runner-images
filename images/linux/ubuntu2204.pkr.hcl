@@ -4,6 +4,36 @@ variable "allowed_inbound_ip_addresses" {
   default = []
 }
 
+variable "aws_access_key" {
+  type    = string
+  default = "${env("AWS_ACCESS_KEY_ID")}"
+}
+
+variable "aws_ami_name" {
+  type    = string
+  default = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*"
+}
+
+variable "aws_instance_type" {
+  type    = string
+  default = "c5.12xlarge"
+}
+
+variable "aws_region" {
+  type    = string
+  default = "${env("AWS_DEFAULT_REGION")}"
+}
+
+variable "aws_secret_key" {
+  type    = string
+  default = "${env("AWS_SECRET_ACCESS_KEY")}"
+}
+
+variable "aws_ssh_username" {
+  type    = string
+  default = "ubuntu"
+}
+
 variable "azure_tags" {
   type    = map(string)
   default = {}
@@ -145,6 +175,48 @@ variable "vm_size" {
   default = "Standard_D4s_v4"
 }
 
+# The amazon-ami data block is generated from your amazon builder source_ami_filter; a data
+# from this block can be referenced in source and locals blocks.
+# Read the documentation for data blocks here:
+# https://www.packer.io/docs/templates/hcl_templates/blocks/data
+# Read the documentation for the Amazon AMI Data Source here:
+# https://www.packer.io/plugins/datasources/amazon/ami
+data "amazon-ami" "build_ami" {
+  access_key = "${var.aws_access_key}"
+  filters = {
+    name                = "${var.aws_ami_name}"
+    root-device-type    = "ebs"
+    virtualization-type = "hvm"
+  }
+  most_recent = true
+  owners      = ["099720109477"]
+  region      = "${var.aws_region}"
+  secret_key  = "${var.aws_secret_key}"
+}
+
+# "timestamp" template function replacement
+locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
+
+# source blocks are generated from your builders; a source can be referenced in
+# build blocks. A build block runs provisioner and post-processors on a
+# source. Read the documentation for source blocks here:
+# https://www.packer.io/docs/templates/hcl_templates/blocks/source
+source "amazon-ebs" "build_ami" {
+  access_key    = "${var.aws_access_key}"
+  ami_name      = "packer-${local.timestamp}"
+  instance_type = "${var.aws_instance_type}"
+  launch_block_device_mappings {
+    delete_on_termination = true
+    device_name           = "/dev/sda1"
+    volume_size           = 64
+    volume_type           = "gp2"
+  }
+  region       = "${var.aws_region}"
+  secret_key   = "${var.aws_secret_key}"
+  source_ami   = "${data.amazon-ami.build_ami.id}"
+  ssh_username = "${var.aws_ssh_username}"
+}
+
 source "azure-arm" "build_vhd" {
   allowed_inbound_ip_addresses           = "${var.allowed_inbound_ip_addresses}"
   build_resource_group_name              = "${var.build_resource_group_name}"
@@ -179,8 +251,23 @@ source "azure-arm" "build_vhd" {
   }
 }
 
+source "docker" "build_docker" {
+  commit      = true
+  image       = "ubuntu:20.04"
+  privileged  = true
+  run_command = ["-d", "-i", "-t", "--rm", "-v", "${path.root}/scripts/helpers/prequisites.sh:/init", "--entrypoint=/init", "--cgroupns=host", "--tmpfs", "/run", "--tmpfs", "/run/lock", "-v", "/sys/fs/cgroup:/sys/fs/cgroup", "--", "{{ .Image }}"]
+}
 build {
-  sources = ["source.azure-arm.build_vhd"]
+  sources = ["source.azure-arm.build_vhd", "source.amazon-ebs.build_ami", "source.docker.build_docker"]
+
+  provisioner "shell" {
+    inline = ["while true; do", "  if pgrep -f '/lib/systemd/systemd' >/dev/null; then", "    break", "  fi", "  sleep 1", "done"]
+  }
+
+  provisioner "shell" {
+    execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+    script          = "${path.root}/scripts/installers/prequisites.sh"
+  }
 
   provisioner "shell" {
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"

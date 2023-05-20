@@ -1,5 +1,11 @@
 {
     "variables": {
+        "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+        "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+        "aws_region": "{{env `AWS_DEFAULT_REGION`}}",
+        "aws_instance_type": "c5.12xlarge",
+        "aws_ami_name": "ubuntu/images/*ubuntu-focal-20.04-amd64-server-*",
+        "aws_ssh_username": "ubuntu",        
         "client_id": "{{env `ARM_CLIENT_ID`}}",
         "client_secret": "{{env `ARM_CLIENT_SECRET`}}",
         "client_cert_path": "{{env `ARM_CLIENT_CERT_PATH`}}",
@@ -58,12 +64,38 @@
             "os_disk_size_gb": "86"
         },
         {
+            "type": "amazon-ebs",
+            "access_key": "{{user `aws_access_key`}}",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "region": "{{user `aws_region`}}",
+            "source_ami_filter": {
+                "filters": {
+                    "virtualization-type": "hvm",
+                    "name": "{{user `aws_ami_name`}}",
+                    "root-device-type": "ebs"
+                },
+                "most_recent": true,
+                "owners": ["099720109477"]
+            },
+            "instance_type": "{{user `aws_instance_type`}}",
+            "ssh_username": "{{user `aws_ssh_username`}}",
+            "ami_name": "packer-{{timestamp}}",
+            "launch_block_device_mappings": [
+                {
+                    "device_name": "/dev/sda1",
+                    "volume_size": 64,
+                    "volume_type": "gp2",
+                    "delete_on_termination": true
+                }
+            ]
+        },        
+        {
         "type": "docker",
         "image": "ubuntu:20.04",
         "privileged": true,
         "run_command": [
             "-d", "-i", "-t", "--rm",
-            "-v", "{{template_dir}}/scripts/helpers/prequisites.sh:/init", "--entrypoint=/init",
+            "-v", "{{template_dir}}/scripts/helpers/init:/init", "--entrypoint=/init",
             "--cgroupns=host", "--tmpfs", "/run", "--tmpfs", "/run/lock", "-v", "/sys/fs/cgroup:/sys/fs/cgroup",
             "--", "{{.Image}}"
         ],
@@ -84,29 +116,7 @@
         },
         {
             "type": "shell",
-            "inline": [
-                "apt-get update",
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates sudo"
-            ],
-            "execute_command": "sh -c '{{ .Vars }} {{ .Path }}'"
-        },
-        {
-            "type": "shell",
-            "inline": [
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends  lsb-release wget curl walinuxagent motd-news-config"
-            ],
-            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-        },       
-        {
-            "type": "shell",
-            "inline": [
-                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libicu-dev",
-                "curl -L -o /tmp/powershell.tar.gz https://github.com/PowerShell/PowerShell/releases/download/v7.3.4/powershell-7.3.4-linux-$(uname -m | sed -e 's/x86_64/x64/g' -e 's/aarch64/arm64/g').tar.gz",
-                "mkdir -p /opt/microsoft/powershell/7",
-                "tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/7",
-                "chmod +x /opt/microsoft/powershell/7/pwsh",
-                "ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh"
-            ],
+            "script": "{{template_dir}}/scripts/installers/prequisites.sh",
             "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'"
         },
         {
