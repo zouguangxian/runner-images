@@ -8,7 +8,7 @@ REPO_URL="https://packages.cloud.google.com/apt"
 
 # Install the Google Cloud SDK
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] $REPO_URL cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list
-wget -q https://packages.cloud.google.com/apt/doc/apt-key.gpg -O /usr/share/keyrings/cloud.google.gpg
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 apt-get update -y
 apt-get install -y google-cloud-sdk
 
