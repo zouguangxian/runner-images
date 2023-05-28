@@ -4,6 +4,10 @@
 ##  Desc:  Install SqlPackage CLI to DacFx (https://docs.microsoft.com/sql/tools/sqlpackage/sqlpackage-download#get-sqlpackage-net-core-for-linux)
 ################################################################################
 
+if [ "$(uname -m)" == "aarch64" ]; then
+    exit 0
+fi
+
 # Source the helpers for use with the script
 source $HELPER_SCRIPTS/install.sh
 source $HELPER_SCRIPTS/os.sh

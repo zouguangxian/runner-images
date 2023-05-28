@@ -3,6 +3,9 @@
 ##  File:  mssql-cmd-tools.sh
 ##  Desc:  Install MS SQL Server client tools (https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup-tools?view=sql-server-2017)
 ################################################################################
+if [ "$(uname -m)" == "aarch64" ]; then
+    exit 0
+fi
 
 export ACCEPT_EULA=Y
 

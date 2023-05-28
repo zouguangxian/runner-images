@@ -6,6 +6,10 @@
 
 source $HELPER_SCRIPTS/install.sh
 
+if [ "$(uname -m)" == "aarch64" ]; then
+    exit 0
+fi
+
 REPO_URL="https://packages.microsoft.com/repos/edge"
 gpg_key="/usr/share/keyrings/microsoft-edge.gpg"
 repo_path="/etc/apt/sources.list.d/microsoft-edge.list"
