@@ -11,6 +11,8 @@ source $HELPER_SCRIPTS/os.sh
 export RUSTUP_HOME=/etc/skel/.rustup
 export CARGO_HOME=/etc/skel/.cargo
 
+apt-get install -y libz-dev openssl libssl-dev
+
 curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable --profile=minimal
 
 # Initialize environment variables
